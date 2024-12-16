@@ -1,5 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Sarainco</title><link>https://Sarainco.github.io</link><description>个人博客</description><copyright>Sarainco</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.com/Sarainco/yuji/blob/main/img_tool/logo.png?raw=true</url><title>avatar</title><link>https://Sarainco.github.io</link></image><lastBuildDate>Mon, 09 Dec 2024 13:09:08 +0000</lastBuildDate><managingEditor>Sarainco</managingEditor><ttl>60</ttl><webMaster>Sarainco</webMaster><item><title>Linux网络开发</title><link>https://Sarainco.github.io/post/Linux-wang-luo-kai-fa.html</link><description>##### 1.网络协议&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Sarainco</title><link>https://Sarainco.github.io</link><description>个人博客</description><copyright>Sarainco</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.com/Sarainco/yuji/blob/main/img_tool/logo.png?raw=true</url><title>avatar</title><link>https://Sarainco.github.io</link></image><lastBuildDate>Mon, 16 Dec 2024 14:05:03 +0000</lastBuildDate><managingEditor>Sarainco</managingEditor><ttl>60</ttl><webMaster>Sarainco</webMaster><item><title>进程间通信之信号</title><link>https://Sarainco.github.io/post/jin-cheng-jian-tong-xin-zhi-xin-hao.html</link><description>#### 一、什么是信号&#13;
+&#13;
+##### 1. 信号是内容受限的一种异步通信机制&#13;
+&#13;
+* 目的：通信&#13;
+* 本质：软件层面对中断机制的一种模拟。</description><guid isPermaLink="true">https://Sarainco.github.io/post/jin-cheng-jian-tong-xin-zhi-xin-hao.html</guid><pubDate>Mon, 16 Dec 2024 14:04:39 +0000</pubDate></item><item><title>Linux网络开发</title><link>https://Sarainco.github.io/post/Linux-wang-luo-kai-fa.html</link><description>##### 1.网络协议&#13;
 &#13;
 ###### 1.1 什么是计算机网络&#13;
 &#13;
