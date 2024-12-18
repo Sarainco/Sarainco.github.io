@@ -264,8 +264,68 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </tr>
 </tbody>
 </table></markdown-accessiblity-table>
+<h4>四、示例</h4>
 </li>
-</ul></div>
+</ul>
+<p>内核代码</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-smi">void</span> <span class="pl-en">trigger_osc_function</span>(<span class="pl-smi">u16</span> <span class="pl-s1">port_id</span>, <span class="pl-smi">u8</span> <span class="pl-s1">state</span>) {
+    <span class="pl-k">struct</span> <span class="pl-smi">pid</span> <span class="pl-c1">*</span><span class="pl-s1">pid_struct</span>;
+    <span class="pl-k">struct</span> <span class="pl-smi">task_struct</span> <span class="pl-c1">*</span><span class="pl-s1">task</span>;
+    <span class="pl-k">struct</span> <span class="pl-smi">siginfo</span> <span class="pl-s1">info</span>;
+    <span class="pl-c">//u16 port_id = 0;</span>
+    <span class="pl-c">//u8 state = 0;</span>
+
+    <span class="pl-k">if</span> (<span class="pl-s1">osc_process_pid</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">0</span>) {
+        <span class="pl-en">printk</span>(<span class="pl-c1">KERN_DEBUG</span><span class="pl-s">"No user process registered.\n"</span>);
+        <span class="pl-k">return</span>;
+    }
+
+    <span class="pl-c">// 获取 PID 的结构体</span>
+    <span class="pl-s1">pid_struct</span> <span class="pl-c1">=</span> <span class="pl-en">find_get_pid</span>(<span class="pl-s1">osc_process_pid</span>);
+    <span class="pl-k">if</span> (!<span class="pl-s1">pid_struct</span>) {
+        <span class="pl-en">printk</span>(<span class="pl-c1">KERN_DEBUG</span><span class="pl-s">"Invalid PID: %d\n"</span>, <span class="pl-s1">osc_process_pid</span>);
+        <span class="pl-k">return</span>;
+    }
+
+    <span class="pl-c">// 获取进程的 task_struct</span>
+    <span class="pl-s1">task</span> <span class="pl-c1">=</span> <span class="pl-en">pid_task</span>(<span class="pl-s1">pid_struct</span>, <span class="pl-c1">PIDTYPE_PID</span>);
+    <span class="pl-k">if</span> (!<span class="pl-s1">task</span>) {
+        <span class="pl-en">printk</span>(<span class="pl-c1">KERN_DEBUG</span><span class="pl-s">"Failed to find task for PID: %d\n"</span>, <span class="pl-s1">osc_process_pid</span>);
+        <span class="pl-k">return</span>;
+    }
+
+    <span class="pl-c">// 填充信号信息</span>
+    <span class="pl-en">memset</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">info</span>, <span class="pl-c1">0</span>, <span class="pl-k">sizeof</span>(<span class="pl-k">struct</span> <span class="pl-smi">siginfo</span>));
+    <span class="pl-s1">info</span>.<span class="pl-c1">si_signo</span> <span class="pl-c1">=</span> <span class="pl-c1">SIGUSR1</span>;     <span class="pl-c">// 信号类型</span>
+    <span class="pl-s1">info</span>.<span class="pl-c1">si_code</span> <span class="pl-c1">=</span> <span class="pl-c1">SI_QUEUE</span>;    <span class="pl-c">// 用户自定义信号</span>
+    <span class="pl-s1">info</span>.<span class="pl-c1">si_int</span> <span class="pl-c1">=</span> (<span class="pl-s1">port_id</span> &lt;&lt; <span class="pl-c1">8</span>) | <span class="pl-s1">state</span>;<span class="pl-c">// 数据</span>
+
+    <span class="pl-c">// 向用户态进程发送信号</span>
+    <span class="pl-k">if</span> (<span class="pl-en">send_sig_info</span>(<span class="pl-c1">SIGUSR1</span>, (<span class="pl-k">struct</span> <span class="pl-smi">kernel_siginfo</span> <span class="pl-c1">*</span>)<span class="pl-c1">&amp;</span><span class="pl-s1">info</span>, <span class="pl-s1">task</span>) <span class="pl-c1">&lt;</span> <span class="pl-c1">0</span>) {
+        <span class="pl-en">printk</span>(<span class="pl-c1">KERN_DEBUG</span><span class="pl-s">"Failed to send signal to user process\n"</span>);
+    } <span class="pl-k">else</span> {
+        <span class="pl-en">printk</span>(<span class="pl-c1">KERN_DEBUG</span><span class="pl-s">"Signal sent to user process (PID: %d) port info 0x%x\n"</span>, <span class="pl-s1">osc_process_pid</span>, <span class="pl-s1">info</span>.<span class="pl-c1">si_int</span>);
+    }
+}</pre></div>
+<p>用户态代码</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-c">// 信号处理函数</span>
+<span class="pl-smi">void</span> <span class="pl-en">handle_signal</span>(<span class="pl-smi">int</span> <span class="pl-s1">signo</span>, <span class="pl-smi">siginfo_t</span> <span class="pl-c1">*</span><span class="pl-s1">info</span>, <span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-s1">context</span>) {
+    <span class="pl-k">if</span> (<span class="pl-s1">signo</span> <span class="pl-c1">==</span> <span class="pl-c1">SIGUSR1</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Received SIGUSR1 from kernel! Data: 0x%x\n"</span>, <span class="pl-s1">info</span><span class="pl-c1">-&gt;</span><span class="pl-c1">si_int</span>);
+        <span class="pl-c">//system("echo 'User function executed!'");</span>
+        <span class="pl-c">//const char *command = "./qdctloscmainmb1130a 3 1 0 8 1";</span>
+        <span class="pl-k">const</span> <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">command</span> <span class="pl-c1">=</span> <span class="pl-s">"./qdctloscmainmb1130a 0 1 8 4 369"</span>;
+            <span class="pl-c">// 调用 system 执行命令</span>
+        <span class="pl-en">system</span>(<span class="pl-s1">command</span>);
+
+        <span class="pl-k">const</span> <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">osc_info_cmd</span>;
+        <span class="pl-en">osc_create_command</span>((<span class="pl-s1">info</span><span class="pl-c1">-&gt;</span><span class="pl-c1">si_int</span> &gt;&gt; <span class="pl-c1">8</span>), (<span class="pl-s1">info</span><span class="pl-c1">-&gt;</span><span class="pl-c1">si_int</span> <span class="pl-c1">&amp;</span> <span class="pl-c1">0xff</span>), <span class="pl-s1">osc_info_cmd</span>);
+
+        <span class="pl-en">update_port_state</span>(<span class="pl-s1">port_info</span>, <span class="pl-k">sizeof</span>(<span class="pl-s1">port_info</span>)/ <span class="pl-k">sizeof</span>(<span class="pl-s1">port_info</span>[<span class="pl-c1">0</span>]), <span class="pl-s1">info</span><span class="pl-c1">-&gt;</span><span class="pl-c1">si_int</span> &gt;&gt; <span class="pl-c1">8</span>, <span class="pl-s1">osc_info_cmd</span>);
+
+        <span class="pl-en">write_port_info_to_file</span>(<span class="pl-s">"osc_info.txt"</span>, <span class="pl-s1">port_info</span>, <span class="pl-k">sizeof</span>(<span class="pl-s1">port_info</span>) / <span class="pl-k">sizeof</span>(<span class="pl-s1">port_info</span>[<span class="pl-c1">0</span>]));
+    }
+}</pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
